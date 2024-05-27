@@ -1,10 +1,9 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'package:stripe_terminal/stripe_terminal.dart';
 
@@ -25,14 +24,14 @@ class _MyAppState extends State<MyApp> {
   final Dio _dio = Dio(
     BaseOptions(
       // TODO: THIS URL does not work
-      baseUrl: "https://deb8-103-163-182-241.in.ngrok.io",
+      baseUrl: "https://ec31-49-193-64-136.ngrok-free.app",
     ),
   );
 
   Future<String> getConnectionString() async {
     // get api call using _dio to get connection token
     Response response = await _dio.get("/connectionToken");
-    if (!(response.data)["success"]) {
+    if (!(response.data["success"])) {
       throw Exception(
         "Failed to get connection token because ${response.data["message"]}",
       );
@@ -47,13 +46,8 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<String> createPaymentIntent() async {
-    Response invoice = await _dio.post("/createPaymentIntent", data: {
-      "email": "awazgyawali@gmail.com",
-      "order": {"test": "1"},
-      "ticketCount": 3,
-      "price": 5,
-    });
-    return jsonDecode(invoice.data)["paymentIntent"]["client_secret"];
+    Response invoice = await _dio.post("/createPaymentIntent");
+    return invoice.data['data']["client_secret"];
   }
 
   late StripeTerminal stripeTerminal;
@@ -93,6 +87,14 @@ class _MyAppState extends State<MyApp> {
               },
               title: const Text("Scanning mode"),
               trailing: Text(simulated ? "Simulator" : "Real"),
+            ),
+            ListTile(
+              onTap: () async {
+                await Permission.bluetooth.request();
+                await Permission.bluetoothScan.request();
+                await Permission.bluetoothConnect.request();
+              },
+              title: const Text("Ask Bluetooth Permission"),
             ),
             TextButton(
               child: const Text("Init Stripe"),
@@ -164,7 +166,7 @@ class _MyAppState extends State<MyApp> {
                   leading: Text(e.locationId ?? "No Location Id"),
                   onTap: () async {
                     await stripeTerminal
-                        .connectToReader(
+                        .connectBluetoothReader(
                       e.serialNumber,
                       locationId: "tml_EoMcZwfY6g8btZ",
                     )
@@ -222,6 +224,8 @@ class _MyAppState extends State<MyApp> {
               child: const Text("Collect Payment Method"),
               onPressed: () async {
                 paymentIntentId = await createPaymentIntent();
+                print("Here");
+                print(paymentIntentId);
                 stripeTerminal
                     .collectPaymentMethod(paymentIntentId!)
                     .then((StripePaymentIntent paymentIntent) async {
