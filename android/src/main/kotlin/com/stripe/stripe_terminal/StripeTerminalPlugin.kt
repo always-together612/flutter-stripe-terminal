@@ -41,8 +41,6 @@ class StripeTerminalPlugin : FlutterPlugin, MethodCallHandler,
     private val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         arrayOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.BLUETOOTH,
-            Manifest.permission.BLUETOOTH_ADMIN,
             Manifest.permission.BLUETOOTH_SCAN,
             Manifest.permission.BLUETOOTH_CONNECT,
         )
@@ -752,6 +750,10 @@ class StripeTerminalPlugin : FlutterPlugin, MethodCallHandler,
     }
 
     override fun onUserLeaveHint() {
+        TODO("Not yet implemented")
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
         TODO("Not yet implemented")
     }
 
